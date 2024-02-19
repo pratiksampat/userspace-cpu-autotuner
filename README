@@ -1,0 +1,5 @@
+# Userspace Vertical CPU autoscaler
+
+Userspace framework that helps tune CPUs based on application behavior.
+
+Different userspace recommenders can be plugged in to this program.
