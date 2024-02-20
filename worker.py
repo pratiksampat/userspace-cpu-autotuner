@@ -2,6 +2,7 @@
 
 import argparse
 import subprocess
+from simple_scaler import SimpleScaler
 
 def get_container_information(container_names):
     cont_map = {}
@@ -69,6 +70,7 @@ def update_quota_period(f, quota, period=100000):
 def main():
     parser = argparse.ArgumentParser(description='Process a list')
     parser.add_argument('--containers', type=str, help='List to process (enclosed in square brackets)')
+    parser.add_argument('--scaler', type=str, help='simple, lstm, firm')
     args = parser.parse_args()
     cont_list = []
     try:
@@ -78,18 +80,30 @@ def main():
         print("Error: Please provide a valid list enclosed in square brackets.")
         return
 
+    # Get all IDs and Cgroup locations of the containers
     containers = get_container_information(cont_list)
     print(containers)
 
     get_util_info(containers)
     print(containers)
 
-    # Test to verify updating of quota-period
-    for cont in containers:
-        update_quota_period(containers[cont]['cgroup_loc'], "max")
+    # Setup an autoscaler to observe and recommend
+    scaler_classes = {
+        'simple': SimpleScaler,
+    }
 
-    get_util_info(containers)
-    print(containers)
+    if (args.scaler in scaler_classes):
+        scaler = scaler_classes[args.scaler]()
+    else:
+        print("Scaler not found. Defaulting to simple")
+        scaler = scaler_classes['simple']
+    scaler.learn()
+    scaler.recommend()
+
+
+    # # Test to verify updating of quota-period
+    # for cont in containers:
+    #     update_quota_period(containers[cont]['cgroup_loc'], "max")
 
 
 if __name__ == "__main__":
