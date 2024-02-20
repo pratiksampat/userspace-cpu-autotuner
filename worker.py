@@ -38,16 +38,14 @@ def main():
     containers = get_container_information(cont_list)
 
     utils.get_util_info(containers)
-    print(containers)
 
     # Setup an autoscaler to observe and recommend
     scaler_classes = {
-        'simple': SimpleScaler,
+        'simple': SimpleScaler(containers),
     }
 
     if (args.scaler in scaler_classes):
         scaler = scaler_classes[args.scaler]
-        scaler()
     else:
         print("Scaler not found. Defaulting to simple")
         scaler = scaler_classes['simple']
