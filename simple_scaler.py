@@ -1,6 +1,7 @@
 import utils
 import pprint
 import subprocess
+import statistics
 
 class SimpleScaler:
     def __init__(self, containers):
@@ -15,7 +16,7 @@ class SimpleScaler:
                 'throttled_percent_history': [],
                 'quota_history': [],
                 'period_history': [],
-                'location': containers[cont]['cgroup_loc'],
+                # 'location': containers[cont]['cgroup_loc'],
             }
 
     def autotune(self, containers):
@@ -48,5 +49,34 @@ class SimpleScaler:
             self.history_dict[cont]['quota_history'].append(quota)
             self.history_dict[cont]['period_history'].append(period)
 
+    # Simple recommend logic - If load > 90 percent step scale up,
+    # otherwise step down until we have an average utilization over 50P
     def recommend(self, containers):
-        print("Recommending")
+        for cont in containers:
+            load_rate = statistics.mean(self.history_dict[cont]['cpu_load_history'])
+
+            period = float(containers[cont]['period'])
+            if (containers[cont]['quota'] == 'max'):
+                p = subprocess.run(f"nproc", shell=True, capture_output=True, text=True)
+                old_quota = int(p.stdout) * period
+            else:
+                old_quota = float(containers[cont]['quota'])
+
+            quota = old_quota
+            if (load_rate >= 90):
+                quota = old_quota + 5000
+            elif (load_rate <= 50):
+                if (old_quota - 5000 > 10000):
+                    quota = old_quota - 5000
+
+            if (quota != old_quota):
+                utils.update_quota_period(containers[cont]['cgroup_loc'], quota)
+                print("Recommending quota - ", quota)
+            else:
+                print("No change in recommendation")
+
+            del self.history_dict[cont]['cpu_util_history'][:]
+            del self.history_dict[cont]['cpu_load_history'][:]
+            del self.history_dict[cont]['throttled_percent_history'][:]
+            del self.history_dict[cont]['quota_history'][:]
+            del self.history_dict[cont]['period_history'][:]

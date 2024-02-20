@@ -50,7 +50,8 @@ def main():
         print("Scaler not found. Defaulting to simple")
         scaler = scaler_classes['simple']
 
-    scaler.autotune(containers)
+    while True:
+        scaler.autotune(containers)
 
 
     # # Test to verify updating of quota-period
