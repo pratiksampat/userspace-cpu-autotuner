@@ -62,6 +62,11 @@ class LSTMScaler:
             hw_requests, lstm_requests = self.HW_LSTM(self.history_dict[cont]['cpu_util_history'])
             print("HW requests", hw_requests)
             print("LSTM requests", lstm_requests)
+            del self.history_dict[cont]['cpu_util_history'][:]
+            del self.history_dict[cont]['cpu_load_history'][:]
+            del self.history_dict[cont]['throttled_percent_history'][:]
+            del self.history_dict[cont]['quota_history'][:]
+            del self.history_dict[cont]['period_history'][:]
 
 
 def split_sequence(sequence, n_steps_in, n_steps_out, ywindow):
