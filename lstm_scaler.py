@@ -1,5 +1,9 @@
 # LSTM implementation from: https://github.com/ZhaoNeil/On-Demand-Resizing/blob/master/serverless-deploy/coldstart.py
 
+
+# HW - Holt-Winters exponential smoothing
+# LSTM - Long Short-Term Memory
+
 import utils
 import pprint
 import subprocess
@@ -28,14 +32,14 @@ class LSTMScaler:
             }
 
     def autotune(self, containers):
-        for i in range(5):
+        for i in range(200):
+            print("Learning: ", i)
             self.learn(containers)
         self.pp.pprint(self.history_dict)
 
         self.recommend(containers)
 
     def learn(self, containers):
-        print("Learning")
         utils.get_util_info(containers)
 
         for cont in containers:
@@ -49,7 +53,10 @@ class LSTMScaler:
             limits = quota / period
             util = float(containers[cont]['cpu_util'].replace('%', ''))
             load = util / limits
-            throttled_per = (containers[cont]['nr_throttled'] / containers[cont]['nr_periods']) * 100
+            if (containers[cont]['nr_periods'] == 0):
+                throttled_per = 0
+            else:
+                throttled_per = (containers[cont]['nr_throttled'] / containers[cont]['nr_periods']) * 100
 
             self.history_dict[cont]['cpu_util_history'].append(util)
             self.history_dict[cont]['cpu_load_history'].append(load)
@@ -59,12 +66,18 @@ class LSTMScaler:
 
     def recommend(self, containers):
         for cont in containers:
-            hw_requests, lstm_requests = self.HW_LSTM(self.history_dict[cont]['cpu_util_history'])
-            print("HW requests", hw_requests)
-            print("LSTM requests", lstm_requests)
+            hw_upper, hw_lower, hw_target, lstm_upper, lstm_lower, lstm_target = HW_LSTM(self.history_dict[cont]['cpu_util_history'])
+            print("HW upper, lower , target", hw_upper, hw_lower, hw_target)
+            print("LSTM upper, lower, target", lstm_upper, lstm_lower, lstm_target)
+
+            # hw_upper_avg = statistics.mean(hw_upper)
+            # lstm_upper_avg = statistics.mean(lstm_upper)
+            # print("HW upper avg", hw_upper_avg)
+            # print("LSTM upper avg", lstm_upper_avg)
+
             del self.history_dict[cont]['cpu_util_history'][:]
             del self.history_dict[cont]['cpu_load_history'][:]
-            del self.history_dict[cont]['throttled_percent_history'][:]
+            del self.history_dict[cont]['throttled_percent_history' ][:]
             del self.history_dict[cont]['quota_history'][:]
             del self.history_dict[cont]['period_history'][:]
 
@@ -171,6 +184,8 @@ def HW_LSTM(series):
     hw_uppers = []
     hw_lowers = []
 
+    print("Here", len(series))
+
     while i <= len(series):
         series_part = series[:i]
         n = calc_n(i, season_len, history_len)
@@ -194,9 +209,13 @@ def HW_LSTM(series):
         hw_uppers.append(hw_upper)
         hw_lowers.append(hw_lower)
 
+        # print("Hardware target", hw_targets)
+        # print("Hardware upper", hw_uppers)
+        # print("Hardware lower", hw_lowers)
+
         #LSTM model
         if i % 60 == 0 or model is None:
-            model = create_lstm(steps_in, steps_out, n_features, series_part, ywindow)
+            model = create_lstm(steps_in, steps_out, n_features, np.array(series_part), ywindow)
 
         input_data = np.array(series_part[-steps_in:])
         output_data = lstm_predict(input_data, model, steps_in, n_features)
@@ -214,6 +233,9 @@ def HW_LSTM(series):
         lstm_uppers.append(lstm_upper)
         lstm_lowers.append(lstm_lower)
 
+        # print("LSTM target", lstm_targets)
+        # print("LSTM upper", lstm_uppers)
+        # print("LSTM lower", lstm_lowers)
         # HW scaling
         hw_CPU_request_unbuffered = hw_CPU_request - rescale_buffer
         # If no cool-down
@@ -258,5 +280,5 @@ def HW_LSTM(series):
         lstm_requests.append(lstm_CPU_request)
 
         i += 1
-    return hw_requests, lstm_requests
+    return hw_upper, hw_lower, hw_target, lstm_upper, lstm_lower, lstm_target
 
