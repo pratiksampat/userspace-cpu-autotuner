@@ -3,6 +3,7 @@
 import argparse
 import subprocess
 from simple_scaler import SimpleScaler
+from lstm_scaler import LSTMScaler
 import utils
 
 def get_container_information(container_names):
@@ -42,6 +43,7 @@ def main():
     # Setup an autoscaler to observe and recommend
     scaler_classes = {
         'simple': SimpleScaler(containers),
+        'lstm' : LSTMScaler(containers),
     }
 
     if (args.scaler in scaler_classes):
