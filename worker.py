@@ -4,6 +4,7 @@ import argparse
 import subprocess
 from simple_scaler import SimpleScaler
 from lstm_scaler import LSTMScaler
+from autothrottle import AutoThrottle
 import utils
 
 def get_container_information(container_names):
@@ -25,7 +26,7 @@ def get_container_information(container_names):
 def main():
     parser = argparse.ArgumentParser(description='Process a list')
     parser.add_argument('--containers', type=str, help='List to process with spaces')
-    parser.add_argument('--scaler', type=str, help='simple, lstm, firm')
+    parser.add_argument('--scaler', type=str, help='simple, lstm, autothrottle')
     args = parser.parse_args()
     cont_list = []
     try:
@@ -44,6 +45,7 @@ def main():
     scaler_classes = {
         'simple': SimpleScaler(containers),
         'lstm' : LSTMScaler(containers),
+        'autothrottle': AutoThrottle(containers),
     }
 
     if (args.scaler in scaler_classes):
