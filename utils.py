@@ -42,6 +42,19 @@ def get_util_info(cont_map):
         cont_map[cont]['quota'] = quota
         cont_map[cont]['period'] = period
 
+def get_stats_info(cont_map):
+    for cont in cont_map:
+        stats = extract_throttle_stats(cont_map[cont]['cgroup_loc'])
+        cont_map[cont]['nr_periods'] = stats.get('nr_periods', 0)
+        cont_map[cont]['nr_throttled'] = stats.get('nr_throttled', 0)
+        cont_map[cont]['throttled_usec'] = stats.get('throttled_usec', 0)
+        cont_map[cont]['usage_usec'] = stats.get('usage_usec', 0)
+
+        # Get current period and quota
+        quota, period = extract_quota_period(cont_map[cont]['cgroup_loc'])
+        cont_map[cont]['quota'] = quota
+        cont_map[cont]['period'] = period
+
 def update_quota_period(f, quota, period=100000):
     filename = f + '/' + 'cpu.max'
     content = str(quota) + " " + str(period)
