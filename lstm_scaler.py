@@ -75,6 +75,9 @@ class LSTMScaler:
             # print("HW upper avg", hw_upper_avg)
             # print("LSTM upper avg", lstm_upper_avg)
 
+            utils.update_quota_period(containers[cont]['cgroup_loc'], hw_upper)
+            # utils.update_quota_period(containers[cont]['cgroup_loc'], lstm_upper)
+
             del self.history_dict[cont]['cpu_util_history'][:]
             del self.history_dict[cont]['cpu_load_history'][:]
             del self.history_dict[cont]['throttled_percent_history' ][:]
