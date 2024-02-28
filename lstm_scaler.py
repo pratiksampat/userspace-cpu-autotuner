@@ -67,8 +67,8 @@ class LSTMScaler:
     def recommend(self, containers):
         for cont in containers:
             hw_upper, hw_lower, hw_target, lstm_upper, lstm_lower, lstm_target = HW_LSTM(self.history_dict[cont]['cpu_util_history'])
-            print("HW upper, lower , target", hw_upper, hw_lower, hw_target)
-            print("LSTM upper, lower, target", lstm_upper, lstm_lower, lstm_target)
+            print("HW upper, lower , target", hw_upper, hw_lower, hw_target * 1000)
+            print("LSTM upper, lower, target", lstm_upper, lstm_lower, lstm_target * 1000)
 
             # hw_upper_avg = statistics.mean(hw_upper)
             # lstm_upper_avg = statistics.mean(lstm_upper)
