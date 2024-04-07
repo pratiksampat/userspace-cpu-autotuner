@@ -54,8 +54,14 @@ def main():
         print("Scaler not found. Defaulting to simple")
         scaler = scaler_classes['simple']
 
-    while True:
-        scaler.autotune(containers)
+    # while True:
+
+    # Autothrottle needs a warmup of 3 minutes phases of 6 hours
+    for i in range(10):
+        if (args.scaler == 'autothrottle'):
+            scaler.warmup_cont(containers)
+
+    scaler.autotune(containers)
 
 
     # # Test to verify updating of quota-period
