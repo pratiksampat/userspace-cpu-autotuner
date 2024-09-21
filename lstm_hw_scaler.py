@@ -9,16 +9,18 @@ import pprint
 import subprocess
 import numpy as np
 import math
+import time
 from sklearn.preprocessing import MinMaxScaler
 from statsmodels.tsa.api import ExponentialSmoothing
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 
-class LSTMScaler:
-    def __init__(self, containers):
+class LSTM_HW_Scaler:
+    def __init__(self, containers, scaler):
         print("Initting")
         self.pp = pprint.PrettyPrinter(depth=4)
+        self.scaler = scaler
 
         self.history_dict = {}
 
@@ -32,12 +34,14 @@ class LSTMScaler:
             }
 
     def autotune(self, containers):
-        for i in range(200):
-            print("Learning: ", i)
-            self.learn(containers)
-        self.pp.pprint(self.history_dict)
+        while True:
+            for i in range(200):
+                print("Learning: ", i)
+                self.learn(containers)
+            self.pp.pprint(self.history_dict)
 
-        self.recommend(containers)
+            self.recommend(containers)
+            time.sleep(180)
 
     def learn(self, containers):
         utils.get_util_info(containers)
@@ -75,8 +79,10 @@ class LSTMScaler:
             # print("HW upper avg", hw_upper_avg)
             # print("LSTM upper avg", lstm_upper_avg)
 
-            utils.update_quota_period(containers[cont]['cgroup_loc'], hw_upper)
-            # utils.update_quota_period(containers[cont]['cgroup_loc'], lstm_upper)
+            if self.scaler == 'hw':
+                utils.update_quota_period(containers[cont]['cgroup_loc'], hw_upper)
+            else:
+                utils.update_quota_period(containers[cont]['cgroup_loc'], lstm_upper)
 
             del self.history_dict[cont]['cpu_util_history'][:]
             del self.history_dict[cont]['cpu_load_history'][:]

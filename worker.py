@@ -3,7 +3,7 @@
 import argparse
 import subprocess
 from simple_scaler import SimpleScaler
-from lstm_scaler import LSTMScaler
+from lstm_hw_scaler import LSTM_HW_Scaler
 from autothrottle import AutoThrottle
 import utils
 
@@ -44,8 +44,9 @@ def main():
     # Setup an autoscaler to observe and recommend
     scaler_classes = {
         'simple': SimpleScaler(containers),
-        'lstm' : LSTMScaler(containers),
         'autothrottle': AutoThrottle(containers),
+        'lstm' : LSTM_HW_Scaler(containers, args.scaler),
+        'hw' : LSTM_HW_Scaler(containers, args.scaler)
     }
 
     if (args.scaler in scaler_classes):
